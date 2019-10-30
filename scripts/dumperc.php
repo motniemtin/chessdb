@@ -100,7 +100,7 @@ function getMoves( $redis, $row, $depth ) {
 	}
 	unset( $moves1['ply'] );
 
-	if( $recurse && $depth < 9 )
+	if( $recurse && $depth < 30000 )
 	{
 		$isloop = true;
 		if( !isset( $GLOBALS['historytt'][$current_hash] ) )

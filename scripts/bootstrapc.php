@@ -74,7 +74,7 @@ function count_attackers( $fen ) {
 }
 function getthrottle( $maxscore ) {
 	if( $maxscore >= 50 ) {
-		$throttle = $maxscore;
+		$throttle = $maxscore - 1;
 	}
 	else if( $maxscore >= -30 ) {
 		$throttle = (int)( $maxscore - 20 / ( 1 + exp( -abs( $maxscore ) / 10 ) ) );

@@ -75,7 +75,7 @@ function count_attackers( $fen ) {
 }
 function getthrottle( $maxscore ) {
 	if( $maxscore >= 50 ) {
-		$throttle = $maxscore;
+		$throttle = $maxscore - 1;
 	}
 	else if( $maxscore >= -30 ) {
 		$throttle = (int)( $maxscore - 20 / ( 1 + exp( -abs( $maxscore ) / 10 ) ) );
@@ -87,7 +87,7 @@ function getthrottle( $maxscore ) {
 }
 function getadvancethrottle( $maxscore ) {
 	if( $maxscore >= 50 ) {
-		$throttle = $maxscore;
+		$throttle = $maxscore - 1;
 	}
 	else if( $maxscore >= -30 ) {
 		$throttle = (int)( $maxscore - 40 / ( 1 + exp( -abs( $maxscore ) / 10 ) ) );
@@ -203,7 +203,7 @@ function getMoves( $redis, $row, $depth ) {
 	else if( count( $moves1 ) > 0 )
 		updatePly( $redis, $row, $depth );
 
-	if( !isset($moves1['ply']) || $moves1['ply'] < 0 || $moves1['ply'] >= $depth )
+	//if( !isset($moves1['ply']) || $moves1['ply'] < 0 || $moves1['ply'] >= $depth )
 	{
 		if( !isset( $GLOBALS['boardtt'][$current_hash] ) )
 		{
@@ -239,7 +239,7 @@ function getMoves( $redis, $row, $depth ) {
 
 		if( !$isloop )
 		{
-			if( $depth < 5 )
+			if( $depth < 10 )
 			{
 				asort( $moves1 );
 				$throttle = getadvancethrottle( end( $moves1 ) );

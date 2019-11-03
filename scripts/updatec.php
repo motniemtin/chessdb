@@ -5,7 +5,7 @@ ini_set("memory_limit", "-1");
 
 function getthrottle( $maxscore ) {
 	if( $maxscore >= 50 ) {
-		$throttle = $maxscore;
+		$throttle = $maxscore - 1;
 	}
 	else if( $maxscore >= -30 ) {
 		$throttle = (int)( $maxscore - 20 / ( 1 + exp( -abs( $maxscore ) / 10 ) ) );
@@ -153,7 +153,7 @@ function getMoves( $redis, $row, $depth ) {
 
 		if( !$isloop )
 		{
-			if( $depth < 5 )
+			if( $depth < 6 )
 			{
 				shuffle_assoc( $moves1 );
 				foreach( $moves1 as $key => $item ) {

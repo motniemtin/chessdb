@@ -96,7 +96,7 @@ function count_attackers( $fen ) {
 }
 function getthrottle( $maxscore ) {
 	if( $maxscore >= 50 ) {
-		$throttle = $maxscore;
+		$throttle = $maxscore - 1;
 	}
 	else if( $maxscore >= -30 ) {
 		$throttle = (int)( $maxscore - 20 / ( 1 + exp( -abs( $maxscore ) / 10 ) ) );
@@ -108,7 +108,7 @@ function getthrottle( $maxscore ) {
 }
 function getbestthrottle( $maxscore ) {
 	if( $maxscore >= 50 ) {
-		$throttle = $maxscore;
+		$throttle = $maxscore - 1;
 	}
 	else if( $maxscore >= -30 ) {
 		$throttle = (int)( $maxscore - 10 / ( 1 + exp( -abs( $maxscore ) / 20 ) ) );
@@ -120,7 +120,7 @@ function getbestthrottle( $maxscore ) {
 }
 function getlearnthrottle( $maxscore ) {
 	if( $maxscore >= 50 ) {
-		$throttle = $maxscore;
+		$throttle = $maxscore - 1;
 	}
 	else if( $maxscore >= -30 ) {
 		$throttle = (int)( $maxscore - 40 / ( 1 + exp( -abs( $maxscore ) / 10 ) ) );
@@ -1878,7 +1878,7 @@ try{
 					echo $queueout;
 				}
 				else {
-					$doc = $collection2->findAndModify( array( 'ts' => array( '$lt' => new MongoDate( time() - 86400 ) ) ), array( '$set' => array( 'ip' => $_SERVER['REMOTE_ADDR'], 'ts' => new MongoDate() ) ) );
+					$doc = $collection2->findAndModify( array( 'ts' => array( '$lt' => new MongoDate( time() - 3600 ) ) ), array( '$set' => array( 'ip' => $_SERVER['REMOTE_ADDR'], 'ts' => new MongoDate() ) ) );
 					if( !empty( $doc ) && isset( $doc['data'] ) ) {
 						echo $doc['data'];
 					}
@@ -1940,7 +1940,7 @@ try{
 					echo $selout;
 				}
 				else {
-					$doc = $collection2->findAndModify( array( 'ts' => array( '$lt' => new MongoDate( time() - 86400 ) ) ), array( '$set' => array( 'ip' => $_SERVER['REMOTE_ADDR'], 'ts' => new MongoDate() ) ) );
+					$doc = $collection2->findAndModify( array( 'ts' => array( '$lt' => new MongoDate( time() - 3600 ) ) ), array( '$set' => array( 'ip' => $_SERVER['REMOTE_ADDR'], 'ts' => new MongoDate() ) ) );
 					if( !empty( $doc ) && isset( $doc['data'] ) ) {
 						echo $doc['data'];
 					}

@@ -2,6 +2,7 @@
 ignore_user_abort(true);
 header("Cache-Control: no-cache");
 header("Pragma: no-cache");
+header("Access-Control-Allow-Origin: *");
 
 if (!function_exists('http_response_code')) {
 	function http_response_code($code = NULL) {

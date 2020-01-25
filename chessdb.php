@@ -2,6 +2,7 @@
 ignore_user_abort(true);
 header("Cache-Control: no-cache");
 header("Pragma: no-cache");
+header("Access-Control-Allow-Origin: *");
 
 $MASTER_PASSWORD = '123456';
 
@@ -2243,50 +2244,50 @@ try{
 			if( $readwrite_queue->trywritelock() )
 			{
 				//$readwrite_queue->writelock();
-				$docs = array();
-				$queueout = '';
 				$m = new MongoClient('mongodb://localhost');
-				$collection = $m->selectDB('ccdbqueue')->selectCollection('queuedb');
-				$cursor = $collection->find()->sort( array( 'p' => -1 ) )->limit(10);
-				foreach( $cursor as $doc ) {
-					$fen = ccbhexfen2fen(bin2hex($doc['_id']->bin));
-					if( count_pieces( $fen ) >= 10 && count_attackers( $fen ) > 4 ) {
-						$moves = array();
-						foreach( $doc as $key => $item ) {
-							if( $key == '_id' )
-								continue;
-							else if( $key == 'p' )
-								continue;
-							else if( $memcache_obj->add( 'QueueHistory::' . $fen . $key, 1, 0, 300 ) )
-								$moves[] = $key;
-						}
-						if( count( $moves ) > 0 ) {
-							$queueout .= $fen . "\n";
-							foreach( $moves as $move )
-								$queueout .= $fen . ' moves ' . $move . "\n";
-							$thisminute = date('i');
-							$memcache_obj->add( 'QueueCount::' . $thisminute, 0, 0, 150 );
-							$memcache_obj->increment( 'QueueCount::' . $thisminute );
-						}
-					}
-					$docs[] = $doc['_id'];
-				}
-				$cursor->reset();
-				if( count( $docs ) > 0 ) {
-					$collection->remove( array( '_id' => array( '$in' => $docs ) ) );
-				}
-				$readwrite_queue->writeunlock();
-				$collection2 = $m->selectDB('ccdbackqueue')->selectCollection('ackqueuedb');
-				if( strlen($queueout) > 0 ) {
-					$collection2->update( array( '_id' => new MongoBinData(hex2bin(hash( 'md5', $queueout ))) ), array( 'data' => $queueout, 'ip' => $_SERVER['REMOTE_ADDR'], 'ts' => new MongoDate() ), array( 'upsert' => true ) );
-					echo $queueout;
+				$collection = $m->selectDB('ccdbackqueue')->selectCollection('ackqueuedb');
+				$doc = $collection->findAndModify( array( 'ts' => array( '$lt' => new MongoDate( time() - 3600 ) ) ), array( '$set' => array( 'ip' => $_SERVER['REMOTE_ADDR'], 'ts' => new MongoDate() ) ) );
+				if( !empty( $doc ) && isset( $doc['data'] ) ) {
+					echo $doc['data'];
 				}
 				else {
-					$doc = $collection2->findAndModify( array( 'ts' => array( '$lt' => new MongoDate( time() - 3600 ) ) ), array( '$set' => array( 'ip' => $_SERVER['REMOTE_ADDR'], 'ts' => new MongoDate() ) ) );
-					if( !empty( $doc ) && isset( $doc['data'] ) ) {
-						echo $doc['data'];
+					$collection2 = $m->selectDB('ccdbqueue')->selectCollection('queuedb');
+					$cursor = $collection2->find()->sort( array( 'p' => -1 ) )->limit(10);
+					$docs = array();
+					$queueout = '';
+					foreach( $cursor as $doc ) {
+						$fen = ccbhexfen2fen(bin2hex($doc['_id']->bin));
+						if( count_pieces( $fen ) >= 10 && count_attackers( $fen ) > 4 ) {
+							$moves = array();
+							foreach( $doc as $key => $item ) {
+								if( $key == '_id' )
+									continue;
+								else if( $key == 'p' )
+									continue;
+								else if( $memcache_obj->add( 'QueueHistory::' . $fen . $key, 1, 0, 300 ) )
+									$moves[] = $key;
+							}
+							if( count( $moves ) > 0 ) {
+								$queueout .= $fen . "\n";
+								foreach( $moves as $move )
+									$queueout .= $fen . ' moves ' . $move . "\n";
+								$thisminute = date('i');
+								$memcache_obj->add( 'QueueCount::' . $thisminute, 0, 0, 150 );
+								$memcache_obj->increment( 'QueueCount::' . $thisminute );
+							}
+						}
+						$docs[] = $doc['_id'];
+					}
+					$cursor->reset();
+					if( count( $docs ) > 0 ) {
+						$collection2->remove( array( '_id' => array( '$in' => $docs ) ) );
+					}
+					if( strlen($queueout) > 0 ) {
+						$collection->update( array( '_id' => new MongoBinData(hex2bin(hash( 'md5', $queueout ))) ), array( 'data' => $queueout, 'ip' => $_SERVER['REMOTE_ADDR'], 'ts' => new MongoDate() ), array( 'upsert' => true ) );
+						echo $queueout;
 					}
 				}
+				$readwrite_queue->writeunlock();
 			}
 		}
 		else {
@@ -2315,40 +2316,40 @@ try{
 			{
 				//$readwrite_sel->writelock();
 				$m = new MongoClient('mongodb://localhost');
-				$collection = $m->selectDB('ccdbsel')->selectCollection('seldb');
-				$cursor = $collection->find()->sort( array( 'p' => -1 ) )->limit(10);
-				$docs = array();
-				$selout = '';
-				foreach( $cursor as $doc ) {
-					$fen = ccbhexfen2fen(bin2hex($doc['_id']->bin));
-					if( count_pieces( $fen ) >= 10 && count_attackers( $fen ) > 4 && $memcache_obj->add( 'SelHistory::' . $fen, 1, 0, 300 ) )
-					{
-						if( isset( $doc['p'] ) && $doc['p'] > 0 )
-							$selout .= '!' . $fen . "\n";
-						else
-							$selout .= $fen . "\n";
-						$thisminute = date('i');
-						$memcache_obj->add( 'SelCount::' . $thisminute, 0, 0, 150 );
-						$memcache_obj->increment( 'SelCount::' . $thisminute );
-					}
-					$docs[] = $doc['_id'];
-				}
-				$cursor->reset();
-				if( count( $docs ) > 0 ) {
-					$collection->remove( array( '_id' => array( '$in' => $docs ) ) );
-				}
-				$readwrite_sel->writeunlock();
-				$collection2 = $m->selectDB('ccdbacksel')->selectCollection('ackseldb');
-				if( strlen($selout) > 0 ) {
-					$collection2->update( array( '_id' => new MongoBinData(hex2bin(hash( 'md5', $selout ))) ), array( 'data' => $selout, 'ip' => $_SERVER['REMOTE_ADDR'], 'ts' => new MongoDate() ), array( 'upsert' => true ) );
-					echo $selout;
+				$collection = $m->selectDB('ccdbacksel')->selectCollection('ackseldb');
+				$doc = $collection->findAndModify( array( 'ts' => array( '$lt' => new MongoDate( time() - 3600 ) ) ), array( '$set' => array( 'ip' => $_SERVER['REMOTE_ADDR'], 'ts' => new MongoDate() ) ) );
+				if( !empty( $doc ) && isset( $doc['data'] ) ) {
+					echo $doc['data'];
 				}
 				else {
-					$doc = $collection2->findAndModify( array( 'ts' => array( '$lt' => new MongoDate( time() - 3600 ) ) ), array( '$set' => array( 'ip' => $_SERVER['REMOTE_ADDR'], 'ts' => new MongoDate() ) ) );
-					if( !empty( $doc ) && isset( $doc['data'] ) ) {
-						echo $doc['data'];
+					$collection2 = $m->selectDB('ccdbsel')->selectCollection('seldb');
+					$cursor = $collection2->find()->sort( array( 'p' => -1 ) )->limit(10);
+					$docs = array();
+					$selout = '';
+					foreach( $cursor as $doc ) {
+						$fen = ccbhexfen2fen(bin2hex($doc['_id']->bin));
+						if( count_pieces( $fen ) >= 10 && count_attackers( $fen ) > 4 && $memcache_obj->add( 'SelHistory::' . $fen, 1, 0, 300 ) )
+						{
+							if( isset( $doc['p'] ) && $doc['p'] > 0 )
+								$selout .= '!' . $fen . "\n";
+							else
+								$selout .= $fen . "\n";
+							$thisminute = date('i');
+							$memcache_obj->add( 'SelCount::' . $thisminute, 0, 0, 150 );
+							$memcache_obj->increment( 'SelCount::' . $thisminute );
+						}
+						$docs[] = $doc['_id'];
+					}
+					$cursor->reset();
+					if( count( $docs ) > 0 ) {
+						$collection2->remove( array( '_id' => array( '$in' => $docs ) ) );
+					}
+					if( strlen($selout) > 0 ) {
+						$collection->update( array( '_id' => new MongoBinData(hex2bin(hash( 'md5', $selout ))) ), array( 'data' => $selout, 'ip' => $_SERVER['REMOTE_ADDR'], 'ts' => new MongoDate() ), array( 'upsert' => true ) );
+						echo $selout;
 					}
 				}
+				$readwrite_sel->writeunlock();
 			}
 		}
 		else {

@@ -1577,7 +1577,7 @@ try{
 									$score = $score + 1;
 							}
 							$redis = new Redis();
-							$redis->pconnect('192.168.1.2', 8888);
+							$redis->pconnect('192.168.1.2', 8889);
 							if( !scoreExists( $redis, $row, $move ) ) {
 								updateScore( $redis, $row, array( $move => $score ) );
 								echo 'ok';
@@ -1597,7 +1597,7 @@ try{
 								$priority = true;
 							}
 							$redis = new Redis();
-							$redis->pconnect('192.168.1.2', 8888);
+							$redis->pconnect('192.168.1.2', 8889);
 							if( !scoreExists( $redis, $row, $move ) ) {
 								updateQueue( $row, $move, $priority );
 								echo 'ok';
@@ -1900,7 +1900,7 @@ try{
 							$GLOBALS['counter'] = 0;
 							$GLOBALS['boardtt'] = new Judy( Judy::STRING_TO_INT );
 							$redis = new Redis();
-							$redis->pconnect('192.168.1.2', 8888);
+							$redis->pconnect('192.168.1.2', 8889);
 							$statmoves = getMovesWithCheck( $redis, $row, $banmoves, 0, 20, false, $learn, 0 );
 							if( count( $statmoves ) > 0 && $GLOBALS['counter'] >= 10 && $GLOBALS['counter2'] >= 4 ) {
 								setOverrides( $row, $statmoves );
@@ -1941,7 +1941,7 @@ try{
 							$GLOBALS['counter'] = 0;
 							$GLOBALS['boardtt'] = new Judy( Judy::STRING_TO_INT );
 							$redis = new Redis();
-							$redis->pconnect('192.168.1.2', 8888);
+							$redis->pconnect('192.168.1.2', 8889);
 							$statmoves = getMovesWithCheck( $redis, $row, $banmoves, 0, 20, false, $learn, 0 );
 							if( count( $statmoves ) > 0 && $GLOBALS['counter'] >= 10 && $GLOBALS['counter2'] >= 4 ) {
 								setOverrides( $row, $statmoves );
@@ -1981,7 +1981,7 @@ try{
 						}
 						else if( $action == 'queryall' ) {
 							$redis = new Redis();
-							$redis->pconnect('192.168.1.2', 8888);
+							$redis->pconnect('192.168.1.2', 8889);
 							list( $statmoves, $variations ) = getMoves( $redis, $row, $banmoves, true, true, $learn, 0 );
 							if( count( $statmoves ) > 0 ) {
 								$oldscores = setOverrides( $row, $statmoves );
@@ -2064,7 +2064,7 @@ try{
 							$GLOBALS['counter'] = 0;
 							$GLOBALS['boardtt'] = new Judy( Judy::STRING_TO_INT );
 							$redis = new Redis();
-							$redis->pconnect('192.168.1.2', 8888);
+							$redis->pconnect('192.168.1.2', 8889);
 							$statmoves = getMovesWithCheck( $redis, $row, $banmoves, 0, 20, false, $learn, 0 );
 							if( count( $statmoves ) > 0 && $GLOBALS['counter'] >= 10 && $GLOBALS['counter2'] >= 4 ) {
 								setOverrides( $row, $statmoves );
@@ -2105,7 +2105,7 @@ try{
 							$GLOBALS['counter'] = 0;
 							$GLOBALS['boardtt'] = new Judy( Judy::STRING_TO_INT );
 							$redis = new Redis();
-							$redis->pconnect('192.168.1.2', 8888);
+							$redis->pconnect('192.168.1.2', 8889);
 							$statmoves = getMovesWithCheck( $redis, $row, $banmoves, 0, 20, false, $learn, 0 );
 							if( count( $statmoves ) > 0 && $GLOBALS['counter'] >= 10 && $GLOBALS['counter2'] >= 4 ) {
 								setOverrides( $row, $statmoves );
@@ -2151,7 +2151,7 @@ try{
 							$GLOBALS['counter'] = 0;
 							$GLOBALS['boardtt'] = new Judy( Judy::STRING_TO_INT );
 							$redis = new Redis();
-							$redis->pconnect('192.168.1.2', 8888);
+							$redis->pconnect('192.168.1.2', 8889);
 							$statmoves = getAnalysisPath( $redis, $row, $banmoves, 0, 50, true, $learn, 0, $pv );
 							if( count( $statmoves ) > 0 ) {
 								echo 'score:' . $statmoves[$pv[0]] . ',depth:' . count( $pv ) . ',pv:' . implode( '|', $pv );
@@ -2161,7 +2161,7 @@ try{
 						}
 						else if( $action == 'queryscore' ) {
 							$redis = new Redis();
-							$redis->pconnect('192.168.1.2', 8888);
+							$redis->pconnect('192.168.1.2', 8889);
 							list( $statmoves, $variations ) = getMoves( $redis, $row, $banmoves, true, true, true, 0 );
 							if( count( $statmoves ) > 0 ) {
 								arsort( $statmoves );
@@ -2176,7 +2176,7 @@ try{
 							$GLOBALS['counter'] = 0;
 							$GLOBALS['boardtt'] = new Judy( Judy::STRING_TO_INT );
 							$redis = new Redis();
-							$redis->pconnect('192.168.1.2', 8888);
+							$redis->pconnect('192.168.1.2', 8889);
 							$statmoves = getMovesWithCheck( $redis, $row, array(), 0, 100, true, true, 0 );
 							if( count( $statmoves ) >= 5 ) {
 								echo 'ok';
@@ -2187,40 +2187,45 @@ try{
 							}
 						}
 						else if( $action == 'queryengine' ) {
-							$movelist = array();
-							$isvalid = true;
-							if( isset( $_REQUEST['movelist'] ) && !empty( $_REQUEST['movelist'] ) ) {
-								$movelist = explode( "|", $_REQUEST['movelist'] );
-								$nextfen = $row;
-								$movecount = count( $movelist );
-								if( $movecount > 0 && $movecount < 2047 ) {
-									foreach( $movelist as $entry ) {
-										$validmoves = ccbmovegen( $nextfen );
-										if( isset( $validmoves[$entry] ) )
-											$nextfen = ccbmovemake( $nextfen, $entry );
-										else {
-											$isvalid = false;
-											break;
+							if( isset( $_REQUEST['token'] ) && !empty( $_REQUEST['token'] ) && substr( md5( $_REQUEST['board'] . $_REQUEST['token'] ), 0, 2 ) == '00' ) {
+								$movelist = array();
+								$isvalid = true;
+								if( isset( $_REQUEST['movelist'] ) && !empty( $_REQUEST['movelist'] ) ) {
+									$movelist = explode( "|", $_REQUEST['movelist'] );
+									$nextfen = $row;
+									$movecount = count( $movelist );
+									if( $movecount > 0 && $movecount < 2047 ) {
+										foreach( $movelist as $entry ) {
+											$validmoves = ccbmovegen( $nextfen );
+											if( isset( $validmoves[$entry] ) )
+												$nextfen = ccbmovemake( $nextfen, $entry );
+											else {
+												$isvalid = false;
+												break;
+											}
 										}
+									}
+									else
+										$isvalid = false;
+								}
+								if( $isvalid ) {
+									$memcache_obj->add( 'EngineCount', 0 );
+									$engcount = $memcache_obj->increment( 'EngineCount' );
+									$result = getEngineMove( $row, $movelist, 5 - $engcount / 2 );
+									$memcache_obj->decrement( 'EngineCount' );
+									if( !empty( $result ) ) {
+										echo 'move:' . $result;
+									}
+									else {
+										echo 'nobestmove';
 									}
 								}
 								else
-									$isvalid = false;
+									echo 'invalid movelist';
 							}
-							if( $isvalid ) {
-								$memcache_obj->add( 'EngineCount', 0 );
-								$engcount = $memcache_obj->increment( 'EngineCount' );
-								$result = getEngineMove( $row, $movelist, 5 - $engcount / 2 );
-								$memcache_obj->decrement( 'EngineCount' );
-								if( !empty( $result ) ) {
-									echo 'move:' . $result;
-								}
-								else {
-									echo 'nobestmove';
-								}
+							else {
+								echo 'invalid parameters';
 							}
-							else
-								echo 'invalid movelist';
 						}
 					}
 				}
